@@ -7,37 +7,29 @@ variable "location" {
 variable "name" {
   type        = string
   description = "The name of the this resource."
-
-  validation {
-    condition     = can(regex("TODO", var.name))
-    error_message = "The name must be TODO." # TODO remove the example below once complete:
-    #condition     = can(regex("^[a-z0-9]{5,50}$", var.name))
-    #error_message = "The name must be between 5 and 50 characters long and can only contain lowercase letters and numbers."
-  }
-}
-
-variable "description" {
-  type        = string
-  description = "(Optional) The description of the Shared Image Gallery." 
-  default = null
-}
-
-
-variable "community_gallery" {
-  description = "Configure the Shared Image Gallery as a Community Gallery."
-  type = object({
-    eula            = string
-    prefix          = string
-    publisher_email = string
-    publisher_uri   = string
-  })
-  default = null
 }
 
 # This is required for most resource modules
 variable "resource_group_name" {
   type        = string
   description = "The resource group where the resources will be deployed."
+}
+
+variable "community_gallery" {
+  type = object({
+    eula            = string
+    prefix          = string
+    publisher_email = string
+    publisher_uri   = string
+  })
+  default     = null
+  description = "Configure the Shared Image Gallery as a Community Gallery."
+}
+
+variable "description" {
+  type        = string
+  default     = null
+  description = "(Optional) The description of the Shared Image Gallery."
 }
 
 variable "enable_telemetry" {
