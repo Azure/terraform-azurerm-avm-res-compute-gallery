@@ -11,8 +11,9 @@ module "naming" {
 }
 
 module "regions" {
-  source                    = "Azure/avm-utl-regions/azurerm"
-  version                   = "~> 0.1"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "~> 0.1"
+
   availability_zones_filter = true
 }
 
@@ -35,7 +36,6 @@ module "compute_gallery" {
   location            = azurerm_resource_group.this.location
   name                = module.naming.shared_image_gallery.name_unique
   resource_group_name = azurerm_resource_group.this.name
-
   ## Optional
   description = "This is a test compute gallery"
   shared_image_definitions = {
