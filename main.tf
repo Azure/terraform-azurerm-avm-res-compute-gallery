@@ -49,6 +49,7 @@ resource "azurerm_shared_image" "this" {
   confidential_vm_enabled             = each.value.confidential_vm_enabled
   confidential_vm_supported           = each.value.confidential_vm_supported
   description                         = each.value.description
+  disk_controller_type_nvme_enabled   = each.value.disk_controller_type_nvme_enabled
   disk_types_not_allowed              = each.value.disk_types_not_allowed
   end_of_life_date                    = each.value.end_of_life_date
   eula                                = each.value.eula
