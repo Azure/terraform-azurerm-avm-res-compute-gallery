@@ -6,9 +6,9 @@ module "naming" {
 
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "~> 0.1"
+  version = "0.10.0"
 
-  availability_zones_filter = true
+  has_availability_zones = true
 }
 
 # This allows us to randomize the region for the resource group.
