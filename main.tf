@@ -23,6 +23,7 @@ resource "azurerm_shared_image_gallery" "this" {
       }
     }
   }
+
   dynamic "timeouts" {
     for_each = var.timeouts != null ? [var.timeouts] : []
 
@@ -68,6 +69,7 @@ resource "azurerm_shared_image" "this" {
     publisher = each.value.identifier.publisher
     sku       = each.value.identifier.sku
   }
+
   ## Optional Inputs
   dynamic "purchase_plan" {
     for_each = each.value.purchase_plan != null ? [each.value.purchase_plan] : []
