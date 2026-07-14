@@ -23,6 +23,7 @@ resource "azurerm_shared_image_gallery" "this" {
       }
     }
   }
+
   dynamic "timeouts" {
     for_each = var.timeouts != null ? [var.timeouts] : []
 
@@ -49,6 +50,7 @@ resource "azurerm_shared_image" "this" {
   confidential_vm_enabled             = each.value.confidential_vm_enabled
   confidential_vm_supported           = each.value.confidential_vm_supported
   description                         = each.value.description
+  disk_controller_type_nvme_enabled   = each.value.disk_controller_type_nvme_enabled
   disk_types_not_allowed              = each.value.disk_types_not_allowed
   end_of_life_date                    = each.value.end_of_life_date
   eula                                = each.value.eula
@@ -68,6 +70,7 @@ resource "azurerm_shared_image" "this" {
     publisher = each.value.identifier.publisher
     sku       = each.value.identifier.sku
   }
+
   ## Optional Inputs
   dynamic "purchase_plan" {
     for_each = each.value.purchase_plan != null ? [each.value.purchase_plan] : []
