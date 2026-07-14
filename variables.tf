@@ -105,6 +105,7 @@ variable "shared_image_definitions" {
       product   = optional(string)
     }))
     description                         = optional(string)
+    disk_controller_type_nvme_enabled   = optional(bool)
     disk_types_not_allowed              = optional(list(string))
     end_of_life_date                    = optional(string)
     eula                                = optional(string)
@@ -130,13 +131,14 @@ A map to create on the Key shared image definitions
 - `identifier` - (Required) An identifier object as defined below.
   - `publisher` - (Required) The Publisher Name for this Gallery Image. Changing this forces a new resource to be created.
   - `offer` - (Required) The Offer Name for this Shared Image. Changing this forces a new resource to be created.
-  - `sku` - (Required) The Name of the SKU for this Gallery Image. Changing this forces a new resource to be created.- `os_type`  - (Required) The type of Operating System present in this Shared Image. Possible values are Linux and Windows. Changing this forces a new resource to be created.        
-- `os_type`  - (Required) The type of Operating System present in this Shared Image. Possible values are Linux and Windows. Changing this forces a new resource to be created.        
+  - `sku` - (Required) The Name of the SKU for this Gallery Image. Changing this forces a new resource to be created.- `os_type`  - (Required) The type of Operating System present in this Shared Image. Possible values are Linux and Windows. Changing this forces a new resource to be created.
+- `os_type`  - (Required) The type of Operating System present in this Shared Image. Possible values are Linux and Windows. Changing this forces a new resource to be created.
 - `purchase_plan` - (Optional) A purchase_plan object as defined below.
   - `name` - (Required) The Purchase Plan Name for this Shared Image. Changing this forces a new resource to be created.
   - `publisher` - (Optional) The Purchase Plan Publisher for this Gallery Image. Changing this forces a new resource to be created.
   - `product` - (Optional) The Purchase Plan Product for this Gallery Image. Changing this forces a new resource to be created.
 - `description` - (Optional) A description of this Shared Image.
+- `disk_controller_type_nvme_enabled` - (Optional) Specifies if the Shared Image supports NVMe disks. Changing this forces a new resource to be created.
 - `disk_types_not_allowed` - (Optional) One or more Disk Types not allowed for the Image. Possible values include Standard_LRS and Premium_LRS.
 - `end_of_life_date` - (Optional) The end of life date in RFC3339 format of the Image.
 - `eula` - (Optional) The End User Licence Agreement for the Shared Image. Changing this forces a new resource to be created.
@@ -178,7 +180,7 @@ A sharing object that supports the following:
 - `community_gallery` - (Optional) A community_gallery object that supports the following:
   - `eula` - (Required) The End User Licence Agreement for the Shared Image Gallery. Changing this forces a new resource to be created.
   - `prefix` - (Required) Prefix of the community public name for the Shared Image Gallery. Changing this forces a new resource to be created.
-  - `publisher_email` - (Required) Email of the publisher for the Shared Image Gallery. Changing this forces a new resource to be created.       
+  - `publisher_email` - (Required) Email of the publisher for the Shared Image Gallery. Changing this forces a new resource to be created.
   - `publisher_uri` - (Required) URI of the publisher for the Shared Image Gallery. Changing this forces a new resource to be created.
 > Note: `community_gallery` must be set when `permission` is set to `Community`.
 DESCRIPTION
