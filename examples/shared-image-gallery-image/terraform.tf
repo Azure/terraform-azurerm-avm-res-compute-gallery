@@ -5,7 +5,7 @@ terraform {
     # Ensure all required providers are listed here and the version property includes a constraint on the maximum major version.
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.108"
+      version = ">= 4.3, < 5.0"
     }
     random = {
       source  = "hashicorp/random"
