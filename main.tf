@@ -1,26 +1,41 @@
-resource "azurerm_shared_image_gallery" "this" {
-  location            = var.location
-  name                = var.name
-  resource_group_name = var.resource_group_name
-  description         = var.description
-  tags                = var.tags
+resource "azapi_resource" "this" {
+  location  = var.location
+  name      = var.name
+  parent_id = var.parent_id
+  type      = var.resource_types.shared_image_gallery
+  body = {
+    properties = {
+      description = var.description
+      identifier = {
+      }
+      sharingProfile = var.sharing != null ? {
+        communityGalleryInfo = var.sharing.community_gallery != null ? {
+          eula             = var.sharing.community_gallery.eula
+          publicNamePrefix = var.sharing.community_gallery.prefix
+          publisherContact = var.sharing.community_gallery.publisher_email
+          publisherUri     = var.sharing.community_gallery.publisher_uri
+        } : null
+        permissions = var.sharing.permission
+      } : null
+      softDeletePolicy = var.soft_delete_policy != null ? {
+        gracePeriodInDays     = var.soft_delete_policy.grace_period_in_days
+        isSoftDeleteEnabled   = var.soft_delete_policy.is_soft_delete_enabled
+        retentionPeriodInDays = var.soft_delete_policy.retention_period_in_days
+      } : null
+    }
+  }
+  ignore_body_changes    = length(var.ignore_body_changes.shared_image_gallery) > 0 ? var.ignore_body_changes.shared_image_gallery : null
+  ignore_null_property   = true
+  response_export_values = []
+  retry                  = var.retry
+  tags                   = var.tags
 
-  dynamic "sharing" {
-    for_each = var.sharing != null ? [var.sharing] : []
+  dynamic "identity" {
+    for_each = module.avm_interfaces.managed_identities_azapi == null ? [] : [module.avm_interfaces.managed_identities_azapi]
 
     content {
-      permission = sharing.value.permission
-
-      dynamic "community_gallery" {
-        for_each = sharing.value.community_gallery != null ? [sharing.value.community_gallery] : []
-
-        content {
-          eula            = community_gallery.value.eula
-          prefix          = community_gallery.value.prefix
-          publisher_email = community_gallery.value.publisher_email
-          publisher_uri   = community_gallery.value.publisher_uri
-        }
-      }
+      type         = identity.value.type
+      identity_ids = identity.value.identity_ids
     }
   }
 
@@ -36,72 +51,199 @@ resource "azurerm_shared_image_gallery" "this" {
   }
 }
 
-resource "azurerm_shared_image" "this" {
+moved {
+  from = azurerm_shared_image_gallery.this
+  to   = azapi_resource.this
+}
+
+resource "azapi_resource" "shared_image" {
   for_each = var.shared_image_definitions
 
-  gallery_name = azurerm_shared_image_gallery.this.name
-  location     = var.location
-  ## Required Inputs
-  name                                = each.value.name
-  os_type                             = each.value.os_type
-  resource_group_name                 = var.resource_group_name
-  accelerated_network_support_enabled = each.value.accelerated_network_support_enabled
-  architecture                        = each.value.architecture
-  confidential_vm_enabled             = each.value.confidential_vm_enabled
-  confidential_vm_supported           = each.value.confidential_vm_supported
-  description                         = each.value.description
-  disk_controller_type_nvme_enabled   = each.value.disk_controller_type_nvme_enabled
-  disk_types_not_allowed              = each.value.disk_types_not_allowed
-  end_of_life_date                    = each.value.end_of_life_date
-  eula                                = each.value.eula
-  hyper_v_generation                  = each.value.hyper_v_generation
-  max_recommended_memory_in_gb        = each.value.max_recommended_memory_in_gb
-  max_recommended_vcpu_count          = each.value.max_recommended_vcpu_count
-  min_recommended_memory_in_gb        = each.value.min_recommended_memory_in_gb
-  min_recommended_vcpu_count          = each.value.min_recommended_vcpu_count
-  privacy_statement_uri               = each.value.privacy_statement_uri
-  release_note_uri                    = each.value.release_note_uri
-  specialized                         = each.value.specialized
-  tags                                = each.value.tags
-  trusted_launch_enabled              = each.value.trusted_launch_enabled
-
-  identifier {
-    offer     = each.value.identifier.offer
-    publisher = each.value.identifier.publisher
-    sku       = each.value.identifier.sku
+  location  = var.location
+  name      = each.value.name
+  parent_id = azapi_resource.this.id
+  type      = var.resource_types.shared_image
+  body = {
+    properties = {
+      allowUpdateImage = each.value.allow_update_image
+      architecture     = each.value.architecture
+      description      = each.value.description
+      disallowed = {
+        diskTypes = each.value.disk_types_not_allowed
+      }
+      endOfLifeDate = each.value.end_of_life_date
+      eula          = each.value.eula
+      features = each.value.features == null ? null : [
+        for feature in each.value.features : {
+          name            = feature.name
+          startsAtVersion = feature.starts_at_version
+          value           = feature.value
+        }
+      ]
+      hyperVGeneration = each.value.hyper_v_generation
+      identifier = {
+        offer     = each.value.identifier.offer
+        publisher = each.value.identifier.publisher
+        sku       = each.value.identifier.sku
+      }
+      osState             = each.value.os_state
+      osType              = each.value.os_type
+      privacyStatementUri = each.value.privacy_statement_uri
+      purchasePlan = each.value.purchase_plan != null ? {
+        name      = each.value.purchase_plan.name
+        product   = each.value.purchase_plan.product
+        publisher = each.value.purchase_plan.publisher
+      } : null
+      recommended = {
+        memory = {
+          max = each.value.max_recommended_memory_in_gb
+          min = each.value.min_recommended_memory_in_gb
+        }
+        vCPUs = {
+          max = each.value.max_recommended_vcpu_count
+          min = each.value.min_recommended_vcpu_count
+        }
+      }
+      releaseNoteUri = each.value.release_note_uri
+    }
   }
+  ignore_body_changes    = length(var.ignore_body_changes.shared_image) > 0 ? var.ignore_body_changes.shared_image : null
+  ignore_null_property   = true
+  response_export_values = []
+  retry                  = var.retry
+  tags                   = each.value.tags
 
-  ## Optional Inputs
-  dynamic "purchase_plan" {
-    for_each = each.value.purchase_plan != null ? [each.value.purchase_plan] : []
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
 
     content {
-      name      = purchase_plan.value.name
-      product   = purchase_plan.value.product
-      publisher = purchase_plan.value.publisher
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 }
 
-# required AVM resources interfaces
-resource "azurerm_management_lock" "this" {
-  count = var.lock != null ? 1 : 0
-
-  lock_level = var.lock.kind
-  name       = coalesce(var.lock.name, "lock-${var.lock.kind}")
-  scope      = azurerm_shared_image_gallery.this.id
-  notes      = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
+moved {
+  from = azurerm_shared_image.this
+  to   = azapi_resource.shared_image
 }
 
-resource "azurerm_role_assignment" "this" {
+# Role definitions are resolved here, case-insensitively as the AzureRM provider did, rather than by
+# the interfaces module, whose lookup is case-sensitive. They are listed in the resource group rather
+# than on the automation account, so the lookup does not wait for pending changes to the automation account
+# and a role name that does not exist fails during plan.
+data "azapi_resource_list" "role_definitions" {
+  count = length(var.role_assignments) > 0 ? 1 : 0
+
+  parent_id = var.parent_id
+  type      = "Microsoft.Authorization/roleDefinitions@2022-04-01"
+  response_export_values = {
+    results = "value[].{id: id, role_name: properties.roleName}"
+  }
+}
+
+module "avm_interfaces" {
+  source  = "Azure/avm-utl-interfaces/azure"
+  version = "0.9.0"
+
+  location                                  = var.location
+  enable_telemetry                          = var.enable_telemetry
+  managed_identities                        = var.managed_identities
+  role_assignment_definition_lookup_enabled = false
+  role_assignments                          = local.role_assignments
+}
+
+resource "azapi_resource" "lock" {
+  count = var.lock != null ? 1 : 0
+
+  name      = coalesce(var.lock.name, "lock-${var.lock.kind}")
+  parent_id = azapi_resource.this.id
+  type      = var.resource_types.authorization_locks
+  body = {
+    properties = merge(
+      { level = var.lock.kind },
+      var.lock.notes == null ? {} : { notes = var.lock.notes },
+    )
+  }
+  ignore_body_changes    = length(var.ignore_body_changes.authorization_locks) > 0 ? var.ignore_body_changes.authorization_locks : null
+  response_export_values = []
+  retry                  = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
+
+  # Create the lock last and remove it first. A ReadOnly lock blocks changes to the child resources.
+  depends_on = [
+    azapi_resource.this,
+  ]
+}
+
+moved {
+  from = azurerm_management_lock.this
+  to   = azapi_resource.lock
+}
+
+resource "azapi_resource" "role_assignments" {
   for_each = var.role_assignments
 
-  principal_id                           = each.value.principal_id
-  scope                                  = azurerm_shared_image_gallery.this.id
-  condition                              = each.value.condition
-  condition_version                      = each.value.condition_version
-  delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
-  role_definition_id                     = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? each.value.role_definition_id_or_name : null
-  role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
-  skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
+  name                 = module.avm_interfaces.role_assignments_azapi[each.key].name
+  parent_id            = azapi_resource.this.id
+  type                 = var.resource_types.authorization_role_assignments
+  body                 = module.avm_interfaces.role_assignments_azapi[each.key].body
+  ignore_body_changes  = length(var.ignore_body_changes.authorization_role_assignments) > 0 ? var.ignore_body_changes.authorization_role_assignments : null
+  ignore_casing        = true
+  ignore_null_property = true
+  # The AzureRM provider replaced a role assignment whenever one of its inputs changed. The inputs are
+  # compared, rather than body paths or the resolved role definition ID: Azure normalises role
+  # definition IDs, and the role definition lookup is deferred to apply whenever the resource group is
+  # not yet known. While the prior value is null, as it is straight after upgrading from AzureRM,
+  # nothing is replaced.
+  replace_triggers_external_values = {
+    condition                              = each.value.condition
+    condition_version                      = each.value.condition_version
+    delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
+    description                            = each.value.description
+    principal_id                           = lower(each.value.principal_id)
+    principal_type                         = local.role_assignments[each.key].principal_type
+    role_definition_id_or_name             = lower(each.value.role_definition_id_or_name)
+  }
+  response_export_values = []
+  retry                  = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
+
+  lifecycle {
+    # Upgraded assignments keep the GUID azurerm generated, while the interfaces module generates a
+    # new one. Replacing the assignment would fail with ScopeLocked under a CanNotDelete lock.
+    ignore_changes = [name]
+
+    precondition {
+      condition     = strcontains(lower(local.role_assignments[each.key].role_definition_id_or_name), local.role_definition_resource_substring)
+      error_message = "The role definition `${each.value.role_definition_id_or_name}` was not found in the resource group. Use the name of a role definition that can be assigned there, or the role definition's resource ID."
+    }
+  }
+}
+
+moved {
+  from = azurerm_role_assignment.this
+  to   = azapi_resource.role_assignments
 }
